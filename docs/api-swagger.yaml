@@ -1,0 +1,1145 @@
+openapi: 3.0.3
+info:
+  title: Fresh Rescue API
+  description: |
+    API REST pour l'application mobile Fresh Rescue - Lutte contre le gaspillage alimentaire.
+    
+    ## Authentification
+    Toutes les routes protegees necessitent un token JWT dans le header Authorization:
+    \`\`\`
+    Authorization: Bearer <token>
+    \`\`\`
+    
+    ## Codes d'erreur
+    - 400: Bad Request - Parametres invalides
+    - 401: Unauthorized - Token manquant ou invalide
+    - 403: Forbidden - Acces non autorise
+    - 404: Not Found - Ressource introuvable
+    - 409: Conflict - Conflit de donnees
+    - 500: Internal Server Error
+  version: 1.0.0
+  contact:
+    name: Fresh Rescue Support
+    email: api@freshrescue.com
+
+servers:
+  - url: https://api.freshrescue.com/v1
+    description: Production
+  - url: https://staging-api.freshrescue.com/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Development
+
+tags:
+  - name: Auth
+    description: Authentification et inscription
+  - name: Users
+    description: Gestion du profil utilisateur
+  - name: Products
+    description: Catalogue de produits
+  - name: Orders
+    description: Commandes et panier
+  - name: Stores
+    description: Magasins HyperFresh
+  - name: Gamification
+    description: Points, niveaux et badges
+  - name: Notifications
+    description: Notifications push et in-app
+
+paths:
+  # ==================== AUTH ====================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscription d'un nouvel utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, firstName, lastName]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: SecureP@ss123
+                firstName:
+                  type: string
+                  example: Jean
+                lastName:
+                  type: string
+                  example: Dupont
+                phone:
+                  type: string
+                  example: "+33612345678"
+                referralCode:
+                  type: string
+                  example: FRESH2025
+      responses:
+        '201':
+          description: Utilisateur cree avec succes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email deja utilise
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Connexion utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Connexion reussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Identifiants invalides
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rafraichir le token JWT
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Nouveau token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Deconnexion
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deconnexion reussie
+
+  # ==================== USERS ====================
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Obtenir le profil de l'utilisateur connecte
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      tags: [Users]
+      summary: Mettre a jour le profil
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                phone:
+                  type: string
+                avatarUrl:
+                  type: string
+      responses:
+        '200':
+          description: Profil mis a jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/me/impact:
+    get:
+      tags: [Users]
+      summary: Obtenir les statistiques d'impact
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Statistiques d'impact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImpactStats'
+
+  /users/me/premium:
+    post:
+      tags: [Users]
+      summary: S'abonner a Fresh+ Premium
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethodId]
+              properties:
+                paymentMethodId:
+                  type: string
+                  description: ID de la methode de paiement Stripe
+      responses:
+        '200':
+          description: Abonnement active
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  premiumExpiresAt:
+                    type: string
+                    format: date-time
+    delete:
+      tags: [Users]
+      summary: Annuler l'abonnement Premium
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Abonnement annule
+
+  /users/me/addresses:
+    get:
+      tags: [Users]
+      summary: Obtenir les adresses sauvegardees
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des adresses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+    post:
+      tags: [Users]
+      summary: Ajouter une adresse
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '201':
+          description: Adresse ajoutee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+
+  # ==================== PRODUCTS ====================
+  /products:
+    get:
+      tags: [Products]
+      summary: Lister les produits disponibles
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filtrer par categorie
+        - name: storeId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filtrer par magasin
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Recherche textuelle
+        - name: flashSale
+          in: query
+          schema:
+            type: boolean
+          description: Uniquement les ventes flash
+        - name: lat
+          in: query
+          schema:
+            type: number
+          description: Latitude pour tri par distance
+        - name: lng
+          in: query
+          schema:
+            type: number
+          description: Longitude pour tri par distance
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 10
+          description: Rayon de recherche en km
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Liste des produits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /products/{id}:
+    get:
+      tags: [Products]
+      summary: Obtenir un produit par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Details du produit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Produit non trouve
+
+  /products/flash-sales:
+    get:
+      tags: [Products]
+      summary: Obtenir les ventes flash actives
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Ventes flash
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /categories:
+    get:
+      tags: [Products]
+      summary: Lister les categories
+      responses:
+        '200':
+          description: Liste des categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  # ==================== ORDERS ====================
+  /orders:
+    get:
+      tags: [Orders]
+      summary: Historique des commandes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, ready, collected, cancelled]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    post:
+      tags: [Orders]
+      summary: Creer une nouvelle commande
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [storeId, items]
+              properties:
+                storeId:
+                  type: string
+                  format: uuid
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                        minimum: 1
+      responses:
+        '201':
+          description: Commande creee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Stock insuffisant ou produit indisponible
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Obtenir une commande par ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Details de la commande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Commande non trouvee
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      summary: Annuler une commande
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Commande annulee
+        '400':
+          description: Commande non annulable (deja collectee)
+
+  /orders/{id}/qrcode:
+    get:
+      tags: [Orders]
+      summary: Obtenir le QR code de la commande
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: QR code de la commande
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  qrCode:
+                    type: string
+                    description: QR code encode en base64
+                  orderNumber:
+                    type: string
+                  pickupCode:
+                    type: string
+
+  # ==================== STORES ====================
+  /stores:
+    get:
+      tags: [Stores]
+      summary: Lister les magasins HyperFresh
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+          description: Latitude
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+          description: Longitude
+        - name: radius
+          in: query
+          schema:
+            type: number
+            default: 10
+          description: Rayon en km
+      responses:
+        '200':
+          description: Liste des magasins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+
+  /stores/{id}:
+    get:
+      tags: [Stores]
+      summary: Obtenir un magasin par ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Details du magasin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+
+  # ==================== GAMIFICATION ====================
+  /gamification/points:
+    get:
+      tags: [Gamification]
+      summary: Obtenir les points et le niveau
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Points et niveau
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamificationStatus'
+
+  /gamification/badges:
+    get:
+      tags: [Gamification]
+      summary: Obtenir les badges de l'utilisateur
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des badges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  earned:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Badge'
+                  available:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Badge'
+
+  /gamification/referral:
+    post:
+      tags: [Gamification]
+      summary: Envoyer une invitation de parrainage
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+                  description: Numero de telephone du filleul
+      responses:
+        '200':
+          description: Invitation envoyee
+        '400':
+          description: Limite de parrainages atteinte
+
+  /gamification/share:
+    post:
+      tags: [Gamification]
+      summary: Enregistrer un partage sur les reseaux sociaux
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [platform]
+              properties:
+                platform:
+                  type: string
+                  enum: [facebook, twitter, instagram, tiktok]
+      responses:
+        '200':
+          description: Partage enregistre, points attribues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pointsEarned:
+                    type: integer
+                  alreadyShared:
+                    type: boolean
+        '400':
+          description: Deja partage cette saison
+
+  /gamification/rewards:
+    get:
+      tags: [Gamification]
+      summary: Obtenir les recompenses disponibles
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recompenses du niveau actuel
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reward'
+
+  /gamification/rewards/{id}/claim:
+    post:
+      tags: [Gamification]
+      summary: Reclamer une recompense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Recompense reclamee
+        '400':
+          description: Recompense non disponible ou deja reclamee
+
+  # ==================== NOTIFICATIONS ====================
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Obtenir les notifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: unreadOnly
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Liste des notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  unreadCount:
+                    type: integer
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Marquer une notification comme lue
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Notification marquee comme lue
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Marquer toutes les notifications comme lues
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Toutes les notifications marquees comme lues
+
+  /notifications/push-token:
+    post:
+      tags: [Notifications]
+      summary: Enregistrer un token push
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                platform:
+                  type: string
+                  enum: [ios, android, web]
+      responses:
+        '204':
+          description: Token enregistre
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        avatarUrl:
+          type: string
+        isPremium:
+          type: boolean
+        premiumExpiresAt:
+          type: string
+          format: date-time
+        rescuePoints:
+          type: integer
+        level:
+          type: string
+          enum: [rookie, hero, legend, planet_saver]
+        streakDays:
+          type: integer
+        referralCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ImpactStats:
+      type: object
+      properties:
+        co2SavedKg:
+          type: number
+        mealsSaved:
+          type: integer
+        totalOrders:
+          type: integer
+        totalSaved:
+          type: number
+          description: Economies totales en EUR
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        originalPrice:
+          type: number
+        discountPrice:
+          type: number
+        discountPercent:
+          type: integer
+        stock:
+          type: integer
+        expiryDate:
+          type: string
+          format: date
+        isFlashSale:
+          type: boolean
+        flashSaleEndsAt:
+          type: string
+          format: date-time
+        store:
+          $ref: '#/components/schemas/Store'
+        category:
+          $ref: '#/components/schemas/Category'
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icon:
+          type: string
+        displayOrder:
+          type: integer
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        phone:
+          type: string
+        openingHours:
+          type: object
+        distance:
+          type: number
+          description: Distance en km (si lat/lng fournis)
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, ready, collected, cancelled]
+        subtotal:
+          type: number
+        discountAmount:
+          type: number
+        premiumDiscount:
+          type: number
+        total:
+          type: number
+        pointsEarned:
+          type: integer
+        pickupCode:
+          type: string
+        store:
+          $ref: '#/components/schemas/Store'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        createdAt:
+          type: string
+          format: date-time
+        collectedAt:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        product:
+          $ref: '#/components/schemas/Product'
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+
+    GamificationStatus:
+      type: object
+      properties:
+        rescuePoints:
+          type: integer
+        totalRescuePoints:
+          type: integer
+        level:
+          type: string
+          enum: [rookie, hero, legend, planet_saver]
+        levelProgress:
+          type: number
+          description: Progression vers le niveau suivant (0-100)
+        nextLevelPoints:
+          type: integer
+        streakDays:
+          type: integer
+        hasStreakBonus:
+          type: boolean
+        referralsThisSeason:
+          type: integer
+        maxReferralsPerSeason:
+          type: integer
+        sharedThisSeason:
+          type: boolean
+        seasonEndsAt:
+          type: string
+          format: date-time
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        earnedAt:
+          type: string
+          format: date-time
+
+    Reward:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        level:
+          type: string
+          enum: [rookie, hero, legend, planet_saver]
+        type:
+          type: string
+          enum: [voucher, discount, free_basket]
+        value:
+          type: number
+        isAvailable:
+          type: boolean
+        isClaimed:
+          type: boolean
+        expiresAt:
+          type: string
+          format: date-time
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [order, promo, badge, system]
+        title:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Address:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        isDefault:
+          type: boolean
+
+    AddressInput:
+      type: object
+      required: [address, city, postalCode]
+      properties:
+        label:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        postalCode:
+          type: string
+        isDefault:
+          type: boolean
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+security:
+  - bearerAuth: []
