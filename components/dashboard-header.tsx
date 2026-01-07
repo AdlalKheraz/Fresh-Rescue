@@ -1,5 +1,4 @@
 "use client"
-import { Badge } from "@/components/ui/badge"
 import { Bell, ShoppingBag, Sparkles } from "lucide-react"
 import Image from "next/image"
 
@@ -42,9 +41,6 @@ export function DashboardHeader({
         </div>
 
         {/* Center: Level Badge */}
-        <Badge className="bg-gradient-hero text-white border-0 font-bold px-3 py-1.5 shadow-lg animate-gradient">
-          <span className="text-xs">Eco-Hero LVL {level}</span>
-        </Badge>
 
         {/* Right: Cart + Notifications */}
         <div className="flex items-center gap-2">

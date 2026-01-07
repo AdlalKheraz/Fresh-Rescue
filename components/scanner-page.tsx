@@ -145,21 +145,7 @@ export function ScannerPage() {
             </div>
           </div>
 
-          {/* Brightness slider */}
-          <div className="w-full max-w-xs mb-6">
-            <label className="text-xs text-muted-foreground mb-2 flex items-center justify-center gap-2">
-              <Sun className="h-4 w-4" />
-              Luminosite
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="150"
-              value={brightness}
-              onChange={(e) => setBrightness(Number(e.target.value))}
-              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-            />
-          </div>
+
 
           {/* Order Details */}
           <div className="w-full max-w-sm space-y-4">

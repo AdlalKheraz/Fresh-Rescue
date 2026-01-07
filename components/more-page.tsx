@@ -23,7 +23,7 @@ const menuSections = [
   },
   {
     title: "Communaute",
-    items: [{ icon: Users, label: "Parrainer un ami", badge: "+50pts", color: "text-primary" }],
+    items: [{ icon: Users, label: "Parrainer un ami", badge: "+20pts", color: "text-primary" }],
   },
 ]
 

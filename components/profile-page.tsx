@@ -3,7 +3,6 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import {
   Settings,
   CreditCard,
@@ -50,9 +49,6 @@ export function ProfilePage() {
             </div>
             <h1 className="text-2xl font-black text-foreground mt-4">Lea Martin</h1>
             <p className="text-sm text-muted-foreground">lea.martin@email.com</p>
-            <Badge className="mt-3 bg-gradient-hero text-white border-0 font-bold px-4 py-1.5 shadow-md">
-              Eco-Hero Level 5
-            </Badge>
           </div>
         </div>
       </div>
@@ -91,14 +87,6 @@ export function ProfilePage() {
                   <IconComponent className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <span className="text-sm font-semibold text-foreground">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                {item.badge && (
-                  <Badge variant="secondary" className="text-xs font-bold">
-                    {item.badge}
-                  </Badge>
-                )}
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </div>
             </Card>
           )
