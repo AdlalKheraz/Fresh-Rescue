@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Fresh Rescue - Anti-Gaspillage HyperFresh",
   description: "L'app qui sauve des produits en fin de DLC dans les magasins HyperFresh",
   generator: "v0.app",
+  manifest: "/manifest.json",
   icons: {
     icon: [
       {
