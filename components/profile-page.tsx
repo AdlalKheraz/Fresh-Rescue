@@ -27,8 +27,8 @@ const menuItems = [
 
 const stats = [
   { icon: Leaf, label: "CO2 economise", value: "18.5 kg", gradientClass: "from-primary to-emerald-600" },
-  { icon: Trophy, label: "Badges", value: "12", gradientClass: "from-secondary to-amber-600" },
-  { icon: ShoppingBag, label: "Commandes", value: "34", gradientClass: "from-accent to-purple-600" },
+  { icon: Trophy, label: "Badges", value: "6", gradientClass: "from-secondary to-amber-600" },
+  { icon: ShoppingBag, label: "Commandes", value: "52", gradientClass: "from-accent to-purple-600" },
 ]
 
 export function ProfilePage() {

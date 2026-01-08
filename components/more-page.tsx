@@ -18,7 +18,7 @@ const menuSections = [
     items: [
       { icon: Gift, label: "Mes bons de reduction", badge: "3", color: "text-secondary" },
       { icon: Sparkles, label: "Fresh+ Premium", badge: "Nouveau", color: "text-accent" },
-      { icon: Star, label: "Programme fidelite", badge: null, color: "text-amber-500" },
+      { icon: Star, label: "Programme de fidélité", badge: null, color: "text-amber-500" },
     ],
   },
   {

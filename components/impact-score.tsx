@@ -133,7 +133,7 @@ export function ImpactScore({ stats, onReferralClick, onShareClick }: ImpactScor
           {/* Season Timer */}
           <div className="absolute top-4 right-4 flex items-center gap-1.5 text-xs text-muted-foreground glass rounded-full px-3 py-1.5">
             <Clock className="h-3.5 w-3.5" />
-            <span className="font-medium">{daysLeft}j avant reset</span>
+            <span className="font-medium">{43}j avant reset</span>
           </div>
 
           <div className="flex flex-col gap-5">
@@ -219,7 +219,7 @@ export function ImpactScore({ stats, onReferralClick, onShareClick }: ImpactScor
                   <Progress value={progressPercent} className="h-3 bg-muted" />
                   <div
                     className="absolute top-0 left-0 h-3 rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500"
-                    style={{ width: `${progressPercent}%` }}
+                    style={{ width: `${"82"}%` }}
                   />
                 </div>
               </div>

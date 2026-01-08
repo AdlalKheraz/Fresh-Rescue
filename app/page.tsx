@@ -21,9 +21,9 @@ import { ShareModal } from "@/components/share-modal"
 
 const userStats = {
   points: 287,
-  totalSpent: 287,
+  totalSpent: 247,
   co2Saved: 18.5,
-  mealsSaved: 34,
+  mealsSaved: 52,
   currentStreak: 5,
   referrals: 2,
   socialShares: 0,
